@@ -1,0 +1,16 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.26.0"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^7.2.0",
+    "@openzeppelin/contracts": "^4.9.5",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mssql": "^11.0.1",
+    "papaparse": "^5.5.3",
+    "xlsx": "^0.18.5"
+  }
+}
