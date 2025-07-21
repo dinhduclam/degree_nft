@@ -32,7 +32,7 @@ npm start
 
 - The frontend will run on [http://localhost:3000](http://localhost:3000) by default.
 
-## 6. Using the DApp
+## 4. Using the DApp
 
 - Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Connect your MetaMask wallet (ensure it's on the local Hardhat network).
