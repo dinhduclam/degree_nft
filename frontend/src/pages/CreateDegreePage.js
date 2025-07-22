@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextField, Box, Typography, MenuItem, CircularProgress, Alert, Autocomplete, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { getStudents, searchStudents, addStudent } from '../utils/api';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 const CERTIFICATE_NAMES = [
   'Bachelor of Science',
@@ -33,12 +30,6 @@ function CreateDegreePage({ contract, signer }) {
   const [newStudentAddress, setNewStudentAddress] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [newStudentPhone, setNewStudentPhone] = useState('');
-
-  // Batch minting state
-  const [batchRows, setBatchRows] = useState([]);
-  const [batchError, setBatchError] = useState('');
-  const [batchMinting, setBatchMinting] = useState(false);
-  const [batchStatus, setBatchStatus] = useState('');
 
   // Load students on component mount
   useEffect(() => {
@@ -175,62 +166,6 @@ function CreateDegreePage({ contract, signer }) {
     setMinting(false);
   };
 
-  const handleBatchFile = (e) => {
-    setBatchError('');
-    setBatchRows([]);
-    const file = e.target.files[0];
-    if (!file) return;
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'csv') {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          setBatchRows(results.data);
-        },
-        error: (err) => setBatchError('CSV parse error: ' + err.message)
-      });
-    } else if (ext === 'xlsx' || ext === 'xls') {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const wb = XLSX.read(evt.target.result, { type: 'binary' });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        const [header, ...rows] = data;
-        setBatchRows(rows.map(row => Object.fromEntries(header.map((h, i) => [h, row[i]]))));
-      };
-      reader.readAsBinaryString(file);
-    } else {
-      setBatchError('Unsupported file type. Please upload CSV or XLSX.');
-    }
-  };
-
-  const handleBatchMint = async () => {
-    setBatchMinting(true);
-    setBatchStatus('');
-    let success = 0, fail = 0;
-    for (const row of batchRows) {
-      try {
-        // You may need to adjust these field names to match your file columns
-        const tx = await contract.mintCertificate(
-          row["StudentAddress"],
-          row["StudentName"],
-          row["CertificateName"],
-          row["IssueDate"],
-          row["IPFSLink"],
-          row["ExtraData"],
-          row["TokenURI"]
-        );
-        await tx.wait();
-        success++;
-      } catch (err) {
-        fail++;
-      }
-    }
-    setBatchStatus(`Batch minting complete. Success: ${success}, Failed: ${fail}`);
-    setBatchMinting(false);
-  };
-
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto' }}>
       <Typography variant="h5" gutterBottom>Mint Certificate NFT</Typography>
@@ -345,39 +280,6 @@ function CreateDegreePage({ contract, signer }) {
           <Button onClick={handleAddStudent} variant="contained">Add Student</Button>
         </DialogActions>
       </Dialog>
-      <Box sx={{ mt: 4, mb: 4, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
-        <Typography variant="h6" color="primary" gutterBottom>Batch Mint Degrees (CSV/XLSX)</Typography>
-        <input type="file" accept=".csv,.xlsx,.xls" onChange={handleBatchFile} />
-        {batchError && <Alert severity="error" sx={{ mt: 2 }}>{batchError}</Alert>}
-        {batchRows.length > 0 && (
-          <>
-            <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 300 }}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    {Object.keys(batchRows[0]).map((col, idx) => (
-                      <TableCell key={idx}>{col}</TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {batchRows.map((row, i) => (
-                    <TableRow key={i}>
-                      {Object.values(row).map((val, j) => (
-                        <TableCell key={j}>{val}</TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleBatchMint} disabled={batchMinting}>
-              {batchMinting ? 'Minting...' : 'Mint All'}
-            </Button>
-            {batchStatus && <Alert severity="info" sx={{ mt: 2 }}>{batchStatus}</Alert>}
-          </>
-        )}
-      </Box>
     </Box>
   );
 }

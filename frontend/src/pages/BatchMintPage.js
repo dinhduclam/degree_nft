@@ -96,19 +96,19 @@ function BatchMintPage({ contract }) {
     const exampleData = [
       {
         StudentAddress: '0x1234...abcd',
-        StudentName: 'Alice Smith',
+        StudentName: 'Đình Đức Lâm',
         CertificateName: 'Bachelor of Science',
-        IssueDate: '2024-06-01',
+        IssueDate: '2025-07-01',
         IPFSLink: 'http://localhost:8080/ipfs/EXAMPLE_HASH',
-        ExtraData: 'Summa Cum Laude'
+        ExtraData: ''
       },
       {
         StudentAddress: '0xabcd...1234',
-        StudentName: 'Bob Johnson',
+        StudentName: 'Trần Đức Việt',
         CertificateName: 'Master of Science',
-        IssueDate: '2024-06-01',
+        IssueDate: '2025-07-02',
         IPFSLink: 'http://localhost:8080/ipfs/EXAMPLE_HASH2',
-        ExtraData: 'Magna Cum Laude'
+        ExtraData: ''
       }
     ];
     if (type === 'csv') {
@@ -163,6 +163,7 @@ function BatchMintPage({ contract }) {
           throw new Error('Metadata IPFS upload failed');
         }
         setMetaUploadStatus(`Minting degree ${i + 1} of ${batchRows.length}...`);
+        console.log(row)
         const tx = await contract.mintCertificate(
           row["StudentAddress"],
           row["StudentName"],
@@ -172,6 +173,7 @@ function BatchMintPage({ contract }) {
           row["ExtraData"],
           tokenUri
         );
+        console.log(tx)
         await tx.wait();
         success++;
       } catch (err) {
